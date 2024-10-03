@@ -23,3 +23,10 @@ export function loadData() {
         0,   2,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     ])
 }
+
+export let settings = {
+    movement: {
+        duration: 0.25,
+        type: "forward",
+    }
+}

@@ -1,8 +1,11 @@
-import {loadData} from "./data.js"
+import {loadData, settings} from "./data.js"
 import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {emptyTile, initTileMap, TileMap} from "../Furca/src/tile_map.js"
-import {defaultCanvas} from "../Furca/src/system.js"
+import {apsk, defaultCanvas} from "../Furca/src/system.js"
 import {Key} from "../Furca/src/key.js"
+import {ShapeType} from "../Furca/src/shape.js"
+import {Layer} from "../Furca/src/layer.js"
+import {MoveToPoint} from "./move_to_point.js"
 
 project.getAssets = () => {
     return {
@@ -21,7 +24,14 @@ const crateTile = 6
 const bazookaTile = 7
 const coinTile = 8
 
-const walkable = [-1, ladderTile, openedDoorTile, bazookaTile, coinTile]
+const walkable = [emptyTile, ladderTile, openedDoorTile, bazookaTile, coinTile]
+
+export let GameState = {
+    idle: 0,
+    moving: 1,
+}
+
+export let gameState = GameState.idle
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -39,39 +49,62 @@ project.init = () => {
 
     let coins = level.countTiles(coinTile)
 
-    let player = level.extractTile(playerTile)
+    const player = level.extractVectorTile(playerTile)
+    player.speed = 1
+    let enemies = new Layer()
+    level.extractVectorTiles(enemyTile, ShapeType.box, enemies)
     let doorIndex = level.findTileIndex(closedDoorTile)
+    let entities = new Layer(player, enemies)
+    let fx = new Layer()
 
     project.scene.add(level, player)
 
+    let time = 1
+
     project.update = () => {
-        let dx = 0, dy = 0
-        if(left.wasPressed) {
-            dx = -1
-        } else if(right.wasPressed) {
-            dx = 1
-        } else if(up.wasPressed) {
-            if(level.tileByPoint(player) === ladderTile) {
-                dy = -1
+        fx.update()
+        if(gameState === GameState.idle) {
+            let dx = 0, dy = 0
+            if(left.wasPressed) {
+                dx = -1
+            } else if(right.wasPressed) {
+                dx = 1
+            } else if(up.wasPressed) {
+                if(level.tileByPoint(player) === ladderTile) {
+                    dy = -1
+                }
+            } else if(down.wasPressed) {
+                dy = 1
             }
-        } else if(down.wasPressed) {
-            dy = 1
-        }
 
-        if(dx === 0 && dy === 0) return
+            if(dx === 0 && dy === 0) return
 
-        const x = player.x + dx
-        const y = player.y + dy
+            const x = player.x + dx
+            const y = player.y + dy
 
-        let tile = level.tileByCoords(x, y)
-        if(walkable.includes(tile)) {
-            player.shift(dx, dy)
-        }
+            let tile = level.tileByCoords(x, y)
+            if(walkable.includes(tile)) {
+                gameState = GameState.moving
+                let move = new MoveToPoint(fx, undefined, player, settings.movement, x, y)
+                move.next = () => {
+                    gameState = GameState.idle
+                }
+            }
 
-        if(tile === coinTile) {
-            level.setTileByCoords(x, y, emptyTile)
-            coins--
-            if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
+            switch(tile) {
+                case coinTile:
+                    level.setTileByCoords(x, y, emptyTile)
+                    coins--
+                    if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
+                    break
+                case openedDoorTile:
+
+                    break
+            }
+
+            return
+        } else {
+
         }
 
         player.limit(level)
