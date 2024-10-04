@@ -5,7 +5,10 @@ import {apsk, defaultCanvas} from "../Furca/src/system.js"
 import {Key} from "../Furca/src/key.js"
 import {ShapeType} from "../Furca/src/shape.js"
 import {Layer} from "../Furca/src/layer.js"
-import {MoveToPoint} from "./move_to_point.js"
+import {entries, Entry, MoveToPoint} from "./move_to_point.js"
+import {floor, sign} from "../Furca/src/functions.js"
+import {currentCanvas} from "../Furca/src/canvas.js"
+import {Entity} from "./entity.js"
 
 project.getAssets = () => {
     return {
@@ -31,7 +34,7 @@ export let GameState = {
     moving: 1,
 }
 
-export let gameState = GameState.idle
+export let gameState = GameState.idle, fx, entities
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -49,17 +52,50 @@ project.init = () => {
 
     let coins = level.countTiles(coinTile)
 
-    const player = level.extractVectorTile(playerTile)
-    player.speed = 1
     let enemies = new Layer()
-    level.extractVectorTiles(enemyTile, ShapeType.box, enemies)
     let doorIndex = level.findTileIndex(closedDoorTile)
-    let entities = new Layer(player, enemies)
-    let fx = new Layer()
 
-    project.scene.add(level, player)
+    let player
+    level.extractTilesByPos(playerTile, (tileMap, column, row) => {
+        player = new Entity(1)
+        player.column = column
+        player.row = row
+        return player
+    })
 
-    let time = 1
+    entities = new Layer(player, enemies)
+    fx = new Layer()
+
+    level.extractTilesByPos(enemyTile, (tileMap, column, row) => {
+        const entity = new Entity(2)
+        entity.column = column
+        entity.row = row
+        enemies.add(entity)
+        return entity
+    })
+
+    project.scene.add(level, entities)
+
+    currentCanvas.background = "#999999"
+
+    function blockedTile(x, y) {
+        return !walkable.includes(level.tileByPos(x, y))
+    }
+
+    function move(entity, dx, dy) {
+        if(dx !== 0) {
+            if(entity.xShift === 0 && blockedTile(entity.column + sign(dx), entity.row)) return false
+            if(entity.yShift > 0 && blockedTile(entity.column + sign(dx), entity.row + 1)) return false
+        }
+
+        if(dy !== 0) {
+            if(entity.yShift === 0 && blockedTile(entity.column, entity.row + sign(dy))) return false
+            if(entity.xShift > 0 && blockedTile(entity.column + 1, entity.row + sign(dy))) return false
+        }
+
+        new Entry(entity, dx, dy)
+        return true
+    }
 
     project.update = () => {
         fx.update()
@@ -79,16 +115,18 @@ project.init = () => {
 
             if(dx === 0 && dy === 0) return
 
+            console.log(player.column + ", " + player.row + ", " + player.xShift + ", " + player.yShift)
+
+            if(!move(player, dx, dy)) return
+
             const x = player.x + dx
             const y = player.y + dy
 
             let tile = level.tileByCoords(x, y)
-            if(walkable.includes(tile)) {
-                gameState = GameState.moving
-                let move = new MoveToPoint(fx, undefined, player, settings.movement, x, y)
-                move.next = () => {
-                    gameState = GameState.idle
-                }
+            gameState = GameState.moving
+            let movement = new MoveToPoint()
+            movement.next = () => {
+                gameState = GameState.idle
             }
 
             switch(tile) {
@@ -100,6 +138,13 @@ project.init = () => {
                 case openedDoorTile:
 
                     break
+            }
+
+            for(let enemy of enemies.items) {
+                const dx = sign(player.column + player.xShift / player.grid - enemy.column - enemy.xShift / enemy.grid)
+                const dy = sign(player.row + player.yShift / player.grid - enemy.row - enemy.yShift / enemy.grid)
+                if(dx !== 0 && move(enemy, dx, 0)) continue
+                if(dy !== 0) move(enemy, 0, dy)
             }
 
             return
