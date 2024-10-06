@@ -1,12 +1,11 @@
 import {loadData, settings} from "./data.js"
-import {project, tileMap, tileSet} from "../Furca/src/project.js"
-import {emptyTile, initTileMap, TileMap} from "../Furca/src/tile_map.js"
-import {apsk, defaultCanvas} from "../Furca/src/system.js"
+import {project, tileMap} from "../Furca/src/project.js"
+import {emptyTile, initTileMap} from "../Furca/src/tile_map.js"
+import {defaultCanvas} from "../Furca/src/system.js"
 import {Key} from "../Furca/src/key.js"
-import {ShapeType} from "../Furca/src/shape.js"
 import {Layer} from "../Furca/src/layer.js"
 import {entries, Entry, MoveToPoint} from "./move_to_point.js"
-import {floor, sign} from "../Furca/src/functions.js"
+import {sign} from "../Furca/src/functions.js"
 import {currentCanvas} from "../Furca/src/canvas.js"
 import {Entity} from "./entity.js"
 
@@ -32,9 +31,10 @@ const walkable = [emptyTile, ladderTile, openedDoorTile, bazookaTile, coinTile]
 export let GameState = {
     idle: 0,
     moving: 1,
+    falling: 2,
 }
 
-export let gameState = GameState.idle, fx, entities
+export let gameState = GameState.idle, fx, entities, level
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -47,7 +47,7 @@ project.init = () => {
     defaultCanvas(11, 12)
     initTileMap()
 
-    let level = tileMap.level1.copy()
+    level = tileMap.level1.copy()
     level.setPosition(0, 0)
 
     let coins = level.countTiles(coinTile)
@@ -57,7 +57,7 @@ project.init = () => {
 
     let player
     level.extractTilesByPos(playerTile, (tileMap, column, row) => {
-        player = new Entity(1)
+        player = new Entity(settings.player.fraction)
         player.column = column
         player.row = row
         return player
@@ -67,7 +67,7 @@ project.init = () => {
     fx = new Layer()
 
     level.extractTilesByPos(enemyTile, (tileMap, column, row) => {
-        const entity = new Entity(2)
+        const entity = new Entity(settings.enemy.fraction)
         entity.column = column
         entity.row = row
         enemies.add(entity)
@@ -97,6 +97,20 @@ project.init = () => {
         return true
     }
 
+    function fall(entity) {
+        for(let dx = 0; dx <= 1; dx++) {
+            if(dx === 1 && entity.xShift === 0) continue
+            const x = entity.column + dx
+            if(blockedTile(x, entity.row + 1)) return false
+            for(let dy = 0; dy <= 1; dy++) {
+                const y = entity.row + dy
+                const tile = level.tileByPos(x, y)
+                if(tile === ladderTile) return false
+            }
+        }
+        return true
+    }
+
     project.update = () => {
         fx.update()
         if(gameState === GameState.idle) {
@@ -115,7 +129,7 @@ project.init = () => {
 
             if(dx === 0 && dy === 0) return
 
-            console.log(player.column + ", " + player.row + ", " + player.xShift + ", " + player.yShift)
+            //console.log(player.column + ", " + player.row + ", " + player.xShift + ", " + player.yShift)
 
             if(!move(player, dx, dy)) return
 
@@ -126,7 +140,7 @@ project.init = () => {
             gameState = GameState.moving
             let movement = new MoveToPoint()
             movement.next = () => {
-                gameState = GameState.idle
+                gameState = GameState.falling
             }
 
             switch(tile) {
@@ -148,8 +162,21 @@ project.init = () => {
             }
 
             return
-        } else {
-
+        } else if(gameState === GameState.falling) {
+            entities.processSprites((entity) => {
+                if(fall(entity)) {
+                    new Entry(entity, 0, 1)
+                }
+            })
+            if(entries.length > 0) {
+                gameState = GameState.moving
+                let movement = new MoveToPoint()
+                movement.next = () => {
+                    gameState = GameState.falling
+                }
+            } else {
+                gameState = GameState.idle
+            }
         }
 
         player.limit(level)
