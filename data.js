@@ -25,7 +25,7 @@ export function loadData() {
 export let settings = {
     player: {
         speed: 1,
-        fraction: 2,
+        fraction: 1,
     },
 
     enemy: {
@@ -35,6 +35,7 @@ export let settings = {
 
     falling: {
         duration: 0.1,
+        type: "forward",
     },
 
     movement: {

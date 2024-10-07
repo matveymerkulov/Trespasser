@@ -4,8 +4,8 @@ import {emptyTile, initTileMap} from "../Furca/src/tile_map.js"
 import {defaultCanvas} from "../Furca/src/system.js"
 import {Key} from "../Furca/src/key.js"
 import {Layer} from "../Furca/src/layer.js"
-import {entries, Entry, MoveToPoint} from "./move_to_point.js"
-import {sign} from "../Furca/src/functions.js"
+import {MoveToPoint} from "./move_to_point.js"
+import {abs, dist, sign} from "../Furca/src/functions.js"
 import {currentCanvas} from "../Furca/src/canvas.js"
 import {Entity} from "./entity.js"
 
@@ -34,55 +34,78 @@ export let GameState = {
     falling: 2,
 }
 
-export let gameState = GameState.idle, fx, entities, level
+export let gameState, fx, entities, level
+
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
     const right = new Key("ArrowRight", "KeyD")
     const up = new Key("ArrowUp", "KeyW")
     const down = new Key("ArrowDown", "KeyS")
+    const skip = new Key("Space")
 
     loadData()
 
     defaultCanvas(11, 12)
     initTileMap()
 
-    level = tileMap.level1.copy()
-    level.setPosition(0, 0)
+    let player, enemies, coins, doorIndex
+    initLevel()
 
-    let coins = level.countTiles(coinTile)
+    function initLevel() {
+        gameState = GameState.falling
 
-    let enemies = new Layer()
-    let doorIndex = level.findTileIndex(closedDoorTile)
+        level = tileMap.level1.copy()
+        level.setPosition(0, 0)
 
-    let player
-    level.extractTilesByPos(playerTile, (tileMap, column, row) => {
-        player = new Entity(settings.player.fraction)
-        player.column = column
-        player.row = row
-        return player
-    })
+        coins = level.countTiles(coinTile)
 
-    entities = new Layer(player, enemies)
-    fx = new Layer()
+        enemies = new Layer()
+        doorIndex = level.findTileIndex(closedDoorTile)
 
-    level.extractTilesByPos(enemyTile, (tileMap, column, row) => {
-        const entity = new Entity(settings.enemy.fraction)
-        entity.column = column
-        entity.row = row
-        enemies.add(entity)
-        return entity
-    })
+        level.extractTilesByPos(playerTile, (tileMap, column, row) => {
+            player = new Entity(settings.player.fraction, column, row)
+            return player
+        })
 
-    project.scene.add(level, entities)
+        level.extractTilesByPos(enemyTile, (tileMap, column, row) => {
+            const entity = new Entity(settings.enemy.fraction, column, row)
+            enemies.add(entity)
+            return entity
+        })
+
+        entities = new Layer(player, enemies)
+        fx = new Layer()
+
+        project.scene.clear()
+        project.scene.add(level, entities)
+    }
 
     currentCanvas.background = "#999999"
+
+    function checkTile() {
+        if(player.xShift > 0 || player.yShift > 0) return
+        switch(level.tileByPos(player.column, player.row)) {
+            case coinTile:
+                level.setTileByPos(player.column, player.row, emptyTile)
+                coins--
+                if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
+                break
+            case openedDoorTile:
+                alert("ПОБЕДА!")
+                initLevel()
+                break
+        }
+    }
 
     function blockedTile(x, y) {
         return !walkable.includes(level.tileByPos(x, y))
     }
 
     function move(entity, dx, dy) {
+        entity.dx = 0
+        entity.dy = 0
+
         if(dx !== 0) {
             if(entity.xShift === 0 && blockedTile(entity.column + sign(dx), entity.row)) return false
             if(entity.yShift > 0 && blockedTile(entity.column + sign(dx), entity.row + 1)) return false
@@ -93,7 +116,20 @@ project.init = () => {
             if(entity.xShift > 0 && blockedTile(entity.column + 1, entity.row + sign(dy))) return false
         }
 
-        new Entry(entity, dx, dy)
+        if(dy < 0) {
+            let onLadder = false
+            for(let dx2 = 0; dx2 <= 1; dx2++) {
+                if(dx2 === 1 && entity.xShift === 0) continue
+                for(let dy2 = 0; dy2 <= 1; dy2++) {
+                    if(dy2 === 1 && entity.yShift === 0) continue
+                    if(level.tileByPos(entity.column + dx2, entity.row + dy2) === ladderTile) onLadder = true
+                }
+            }
+            if(!onLadder) return false
+        }
+
+        entity.dx = dx
+        entity.dy = dy
         return true
     }
 
@@ -127,51 +163,70 @@ project.init = () => {
                 dy = 1
             }
 
-            if(dx === 0 && dy === 0) return
+            for(let enemy of enemies.items) {
+                if(enemy.collidesWith(player)) {
+                    alert("ВЫ ПОЙМАНЫ!")
+                    initLevel()
+                }
+            }
+
+            if(dx === 0 && dy === 0 && !skip.wasPressed) return
 
             //console.log(player.column + ", " + player.row + ", " + player.xShift + ", " + player.yShift)
 
             if(!move(player, dx, dy)) return
 
-            const x = player.x + dx
-            const y = player.y + dy
-
-            let tile = level.tileByCoords(x, y)
             gameState = GameState.moving
-            let movement = new MoveToPoint()
+            const movement = new MoveToPoint(settings.movement)
             movement.next = () => {
+                checkTile()
                 gameState = GameState.falling
             }
 
-            switch(tile) {
-                case coinTile:
-                    level.setTileByCoords(x, y, emptyTile)
-                    coins--
-                    if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
-                    break
-                case openedDoorTile:
-
-                    break
-            }
-
             for(let enemy of enemies.items) {
-                const dx = sign(player.column + player.xShift / player.grid - enemy.column - enemy.xShift / enemy.grid)
-                const dy = sign(player.row + player.yShift / player.grid - enemy.row - enemy.yShift / enemy.grid)
+                const dx = sign(player.xPos - enemy.xPos)
+                const dy = sign(player.yPos - enemy.yPos)
                 if(dx !== 0 && move(enemy, dx, 0)) continue
                 if(dy !== 0) move(enemy, 0, dy)
             }
 
+            for(let enemy1 of enemies.items) {
+                for(let enemy2 of enemies.items) {
+                    if(enemy1 === enemy2) continue
+                    if(enemy1.collidesWith(enemy2)) {
+                        move(enemy1, 0, sign(player.yPos - enemy1.yPos))
+                        if(enemy1.collidesWith(enemy2)) {
+                            enemy1.dy = 0
+                        }
+                    }
+                }
+            }
+
             return
         } else if(gameState === GameState.falling) {
+            let someoneIsFalling = false
             entities.processSprites((entity) => {
-                if(fall(entity)) {
-                    new Entry(entity, 0, 1)
-                }
+                entity.dx = 0
+                entity.dy = fall(entity) ? 1 : 0
+                if(entity.dy > 0 && entity === player) someoneIsFalling = true
             })
-            if(entries.length > 0) {
+
+            for(let enemy1 of enemies.items) {
+                for(let enemy2 of enemies.items) {
+                    if(enemy1 === enemy2 || enemy1.dy === 0) continue
+                    if(enemy1.collidesWith(enemy2)) {
+                        enemy1.dy = 0
+                        continue
+                    }
+                    someoneIsFalling = true
+                }
+            }
+
+            if(someoneIsFalling) {
                 gameState = GameState.moving
-                let movement = new MoveToPoint()
+                let movement = new MoveToPoint(settings.falling)
                 movement.next = () => {
+                    checkTile()
                     gameState = GameState.falling
                 }
             } else {
