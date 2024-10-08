@@ -39,7 +39,6 @@ export let GameState = {
 
 export let gameState, fx, entities, level
 
-
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
     const right = new Key("ArrowRight", "KeyD")
@@ -58,7 +57,7 @@ project.init = () => {
     function initLevel() {
         gameState = GameState.falling
 
-        level = tileMap.level2.copy()
+        level = tileMap.level3.copy()
         level.setPosition(0, 0)
 
         coins = level.countTiles(coinTile)
@@ -87,18 +86,34 @@ project.init = () => {
     currentCanvas.background = "#999999"
 
     function checkTile() {
-        if(player.xShift > 0 || player.yShift > 0) return
-        switch(level.tileByPos(player.column, player.row)) {
-            case coinTile:
-                level.setTileByPos(player.column, player.row, emptyTile)
-                coins--
-                if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
-                break
-            case openedDoorTile:
-                alert("VICTORY!")
-                initLevel()
-                break
-        }
+        entities.processSprites((entity) => {
+            if(entity.xShift > 0 || entity.yShift > 0) return
+            switch(level.tileByPos(entity.column, entity.row)) {
+                case coinTile:
+                    if(entity !== player) return
+                    level.setTileByPos(entity.column, entity.row, emptyTile)
+                    coins--
+                    if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
+                    break
+                case flameTile:
+                    if(entity === player) {
+                        alert("YOU ARE BURNED DOWN")
+                        initLevel()
+                    } else {
+                        entity.column = entity.homeColumn
+                        entity.row = entity.homeRow
+                        const index = level.tileIndexForPos(entity.homeColumn, entity.homeRow)
+                        entity.x = level.tileXByIndex(index)
+                        entity.y = level.tileYByIndex(index)
+                    }
+                    break
+                case openedDoorTile:
+                    alert("VICTORY!")
+                    initLevel()
+                    break
+            }
+
+        })
     }
 
     function blockedTile(x, y) {
@@ -152,8 +167,6 @@ project.init = () => {
         }
         return true
     }
-
-    let onPlank = false
 
     project.update = () => {
         tileSet.trespasser.images.setImage(flameTile, flameImages.image(floor(new Date().getTime() / 50) % 25))
