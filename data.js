@@ -9,7 +9,7 @@ export let flameImages
 export function loadData() {
     flameImages = new ImageArray(texture.flame, 5, 5)
 
-    tileSet.trespasser = new TileSet(new ImageArray(texture.tiles, 10, 1))
+    tileSet.trespasser = new TileSet(new ImageArray(texture.tiles, 12, 1))
 
     tileMap.level1 = new TileMap(tileSet.trespasser, 11, 11, -2, -2, 1, 1, [
         0,   2,   5,   0,   0,   0,   0,   0,   5,   0,   0,
@@ -22,6 +22,20 @@ export function loadData() {
         0,  -1,  -1,  -1,  -1,   1,  -1,  -1,  -1,  -1,   0,
         0,   1,   0,   0,   0,   8,   0,   0,   0,   1,   0,
         0,   1,   4,  -1,  -1,  -1,  -1,  -1,  -1,   1,   0,
+        0,   2,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    ])
+
+    tileMap.level2 = new TileMap(tileSet.trespasser, 11, 11, 10, -2, 1, 1, [
+        0,   2,   5,   0,   0,   0,   0,   0,   5,   0,   0,
+        0,   1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   8,   0,
+        0,   8,   0,   1,   0,   0,   0,   1,   0,   0,   0,
+        0,  -1,  -1,  -1,  -1,  -1,  -1,   1,  -1,  -1,   0,
+        0,   0,   0,   1,   0,   8,   0,   0,   1,   8,   0,
+        0,  -1,  -1,   1,  -1,  -1,  -1,  -1,   1,  -1,   0,
+        0,   1,   0,   1,   0,   0,   0,   1,   0,  -1,   0,
+        0,   1,  -1,   1,  -1,  -1,  -1,  -1,   8,  -1,   0,
+        0,   0,   0,   1,   0,   0,   0,   0,   1,  10,   0,
+        0,   4,  -1,   1,  -1,  -1,  -1,  -1,  -1,  -1,   0,
         0,   2,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     ])
 }

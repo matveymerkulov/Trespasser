@@ -24,11 +24,12 @@ const openedDoorTile = 3
 const playerTile = 4
 const enemyTile = 5
 const crateTile = 6
-const bazookaTile = 7
+const ammoTile = 7
 const coinTile = 8
 const flameTile = 9
+const plankTile = 10
 
-const walkable = [emptyTile, ladderTile, openedDoorTile, bazookaTile, coinTile]
+const blocks = [wallTile, crateTile, closedDoorTile]
 
 export let GameState = {
     idle: 0,
@@ -57,7 +58,7 @@ project.init = () => {
     function initLevel() {
         gameState = GameState.falling
 
-        level = tileMap.level1.copy()
+        level = tileMap.level2.copy()
         level.setPosition(0, 0)
 
         coins = level.countTiles(coinTile)
@@ -94,14 +95,14 @@ project.init = () => {
                 if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
                 break
             case openedDoorTile:
-                alert("ПОБЕДА!")
+                alert("VICTORY!")
                 initLevel()
                 break
         }
     }
 
     function blockedTile(x, y) {
-        return !walkable.includes(level.tileByPos(x, y))
+        return blocks.includes(level.tileByPos(x, y))
     }
 
     function move(entity, dx, dy) {
@@ -124,7 +125,9 @@ project.init = () => {
                 if(dx2 === 1 && entity.xShift === 0) continue
                 for(let dy2 = 0; dy2 <= 1; dy2++) {
                     if(dy2 === 1 && entity.yShift === 0) continue
-                    if(level.tileByPos(entity.column + dx2, entity.row + dy2) === ladderTile) onLadder = true
+                    if(level.tileByPos(entity.column + dx2, entity.row + dy2) === ladderTile) {
+                        onLadder = true
+                    }
                 }
             }
             if(!onLadder) return false
@@ -142,13 +145,15 @@ project.init = () => {
             if(blockedTile(x, entity.row + 1)) return false
             for(let dy = 0; dy <= 1; dy++) {
                 const y = entity.row + dy
-                const tile = level.tileByPos(x, y)
+                let tile = level.tileByPos(x, y)
                 if(tile === ladderTile) return false
+                if(tile === plankTile && entity.dy === 0) return false
             }
         }
         return true
     }
 
+    let onPlank = false
 
     project.update = () => {
         tileSet.trespasser.images.setImage(flameTile, flameImages.image(floor(new Date().getTime() / 50) % 25))
@@ -170,7 +175,7 @@ project.init = () => {
 
             for(let enemy of enemies.items) {
                 if(enemy.collidesWith(player)) {
-                    alert("ВЫ ПОЙМАНЫ!")
+                    alert("YOU ARE CAUGHT!")
                     initLevel()
                 }
             }
@@ -213,7 +218,9 @@ project.init = () => {
             entities.processSprites((entity) => {
                 entity.dx = 0
                 entity.dy = fall(entity) ? 1 : 0
-                if(entity.dy > 0 && entity === player) someoneIsFalling = true
+                if(entity.dy > 0 && entity === player) {
+                    someoneIsFalling = true
+                }
             })
 
             for(let enemy1 of enemies.items) {
@@ -221,6 +228,7 @@ project.init = () => {
                     if(enemy1 === enemy2 || enemy1.dy === 0) continue
                     if(enemy1.collidesWith(enemy2)) {
                         enemy1.dy = 0
+                        enemy1.falling = false
                         continue
                     }
                     someoneIsFalling = true

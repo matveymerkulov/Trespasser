@@ -13,6 +13,7 @@ export class Entity extends Sprite {
     xShift = 0
     yShift = 0
     grid
+    falling = false
 
     constructor(grid, column, row) {
         super()
