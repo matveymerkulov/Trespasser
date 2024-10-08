@@ -1,17 +1,18 @@
-import {loadData, settings} from "./data.js"
-import {project, tileMap} from "../Furca/src/project.js"
+import {flameImages, loadData, settings} from "./data.js"
+import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {emptyTile, initTileMap} from "../Furca/src/tile_map.js"
-import {defaultCanvas} from "../Furca/src/system.js"
+import {defaultCanvas, texture} from "../Furca/src/system.js"
 import {Key} from "../Furca/src/key.js"
 import {Layer} from "../Furca/src/layer.js"
 import {MoveToPoint} from "./move_to_point.js"
-import {abs, dist, sign} from "../Furca/src/functions.js"
+import {abs, dist, floor, sign} from "../Furca/src/functions.js"
 import {currentCanvas} from "../Furca/src/canvas.js"
 import {Entity} from "./entity.js"
+import {ImageArray} from "../Furca/src/image_array.js"
 
 project.getAssets = () => {
     return {
-        texture: ["tiles.png"],
+        texture: ["tiles.png", "flame.png"],
         sound: [],
     }
 }
@@ -25,6 +26,7 @@ const enemyTile = 5
 const crateTile = 6
 const bazookaTile = 7
 const coinTile = 8
+const flameTile = 9
 
 const walkable = [emptyTile, ladderTile, openedDoorTile, bazookaTile, coinTile]
 
@@ -147,7 +149,10 @@ project.init = () => {
         return true
     }
 
+
     project.update = () => {
+        tileSet.trespasser.images.setImage(flameTile, flameImages.image(floor(new Date().getTime() / 50) % 25))
+
         fx.update()
         if(gameState === GameState.idle) {
             let dx = 0, dy = 0
