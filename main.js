@@ -9,25 +9,26 @@ import {abs, dist, floor, sign} from "../Furca/src/functions.js"
 import {currentCanvas} from "../Furca/src/canvas.js"
 import {Entity} from "./entity.js"
 import {ImageArray} from "../Furca/src/image_array.js"
+import {MoveSprite} from "./move_sprite.js"
 
 project.getAssets = () => {
     return {
-        texture: ["tiles.png", "flame.png", "coins.png"],
+        texture: ["tiles.png", "flame.png", "coins.png", "grenade.png"],
         sound: [],
     }
 }
 
-const wallTile = 0
-const ladderTile = 1
-const closedDoorTile = 2
-const openedDoorTile = 3
-const playerTile = 4
-const enemyTile = 5
-const crateTile = 6
-const ammoTile = 7
-const coinTile = 8
-const flameTile = 9
-const plankTile = 10
+export const wallTile = 0
+export const ladderTile = 1
+export const closedDoorTile = 2
+export const openedDoorTile = 3
+export const playerTile = 4
+export const enemyTile = 5
+export const crateTile = 6
+export const ammoTile = 7
+export const coinTile = 8
+export const flameTile = 9
+export const plankTile = 10
 
 const blocks = [wallTile, crateTile, closedDoorTile]
 
@@ -35,9 +36,10 @@ export let GameState = {
     idle: 0,
     moving: 1,
     falling: 2,
+    flying: 3,
 }
 
-export let gameState, fx, entities, level, ammo
+export let gameState, fx, grenades, entities, level, ammo, player
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -53,7 +55,7 @@ project.init = () => {
     defaultCanvas(11, 12)
     initTileMap()
 
-    let player, enemies, coins, doorIndex
+    let enemies, coins, doorIndex
     initLevel()
 
     function initLevel() {
@@ -63,6 +65,7 @@ project.init = () => {
         level.setPosition(0, 0)
 
         coins = level.countTiles(coinTile)
+        ammo = 0
 
         enemies = new Layer()
         doorIndex = level.findTileIndex(closedDoorTile)
@@ -80,9 +83,10 @@ project.init = () => {
 
         entities = new Layer(player, enemies)
         fx = new Layer()
+        grenades = new Layer()
 
         project.scene.clear()
-        project.scene.add(level, entities)
+        project.scene.add(level, grenades, entities)
     }
 
     currentCanvas.background = "#999999"
@@ -100,7 +104,7 @@ project.init = () => {
                 case ammoTile:
                     if(entity !== player) return
                     level.setTileByPos(entity.column, entity.row, emptyTile)
-                    ammo--
+                    ammo++
                     break
                 case flameTile:
                     if(entity === player) {
@@ -182,9 +186,13 @@ project.init = () => {
         tileSetImages.setImage(coinTile, coinImages.image(floor(time / 200) % 6))
 
         fx.update()
+
         if(gameState === GameState.idle) {
             const d = fireLeft.wasPressed ? -1 : (fireRight.wasPressed ? 1 : 0)
-
+            if(ammo > 0 && d !== 0) {
+                ammo--
+                new MoveSprite(d)
+            }
 
             let dx = 0, dy = 0
             if(left.wasPressed) {
