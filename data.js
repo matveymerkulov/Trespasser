@@ -4,10 +4,11 @@ import {ImageArray} from "../Furca/src/image_array.js"
 import {texture} from "../Furca/src/system.js"
 import {TileMap} from "../Furca/src/tile_map.js"
 
-export let flameImages
+export let flameImages, coinImages
 
 export function loadData() {
     flameImages = new ImageArray(texture.flame, 5, 5)
+    coinImages = new ImageArray(texture.coins, 6, 1)
 
     tileSet.trespasser = new TileSet(new ImageArray(texture.tiles, 13, 1))
 
@@ -46,7 +47,7 @@ export function loadData() {
         0,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,   1,   0,
         0,  -1,   1,  10,  10,  10,   7,  -1,   1,  -1,   0,
         0,   8,   1,  -1,  -1,  -1,   0,  10,   1,   0,   0,
-        0,   0,   1,  11,   6,  -1,  -1,  -1,   1,  -1,   0,
+        0,   0,   1,  12,   6,  -1,  -1,  -1,   1,  -1,   0,
         0,   9,   9,   0,   9,   9,   0,   9,   1,   4,   2,
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     ])

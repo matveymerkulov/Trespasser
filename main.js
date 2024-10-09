@@ -1,4 +1,4 @@
-import {flameImages, loadData, settings} from "./data.js"
+import {coinImages, flameImages, loadData, settings} from "./data.js"
 import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {emptyTile, initTileMap} from "../Furca/src/tile_map.js"
 import {defaultCanvas, texture} from "../Furca/src/system.js"
@@ -12,7 +12,7 @@ import {ImageArray} from "../Furca/src/image_array.js"
 
 project.getAssets = () => {
     return {
-        texture: ["tiles.png", "flame.png"],
+        texture: ["tiles.png", "flame.png", "coins.png"],
         sound: [],
     }
 }
@@ -37,7 +37,7 @@ export let GameState = {
     falling: 2,
 }
 
-export let gameState, fx, entities, level
+export let gameState, fx, entities, level, ammo
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -45,6 +45,8 @@ project.init = () => {
     const up = new Key("ArrowUp", "KeyW")
     const down = new Key("ArrowDown", "KeyS")
     const skip = new Key("Space")
+    const fireLeft = new Key("KeyQ")
+    const fireRight = new Key("KeyE")
 
     loadData()
 
@@ -94,6 +96,11 @@ project.init = () => {
                     level.setTileByPos(entity.column, entity.row, emptyTile)
                     coins--
                     if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
+                    break
+                case ammoTile:
+                    if(entity !== player) return
+                    level.setTileByPos(entity.column, entity.row, emptyTile)
+                    ammo--
                     break
                 case flameTile:
                     if(entity === player) {
@@ -169,10 +176,16 @@ project.init = () => {
     }
 
     project.update = () => {
-        tileSet.trespasser.images.setImage(flameTile, flameImages.image(floor(new Date().getTime() / 50) % 25))
+        let time = new Date().getTime()
+        let tileSetImages = tileSet.trespasser.images
+        tileSetImages.setImage(flameTile, flameImages.image(floor(time / 50) % 25))
+        tileSetImages.setImage(coinTile, coinImages.image(floor(time / 200) % 6))
 
         fx.update()
         if(gameState === GameState.idle) {
+            const d = fireLeft.wasPressed ? -1 : (fireRight.wasPressed ? 1 : 0)
+
+
             let dx = 0, dy = 0
             if(left.wasPressed) {
                 dx = -1
