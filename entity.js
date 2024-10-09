@@ -2,8 +2,16 @@ import {Sprite} from "../Furca/src/sprite.js"
 import {ctx, distToScreen, xToScreen, yToScreen} from "../Furca/src/canvas.js"
 import {abs} from "../Furca/src/functions.js"
 import {texture} from "../Furca/src/system.js"
+import {VectorSprite} from "../Furca/src/vector_sprite.js"
 
-export class Entity extends Sprite {
+export const EntityType = {
+    player: 0,
+    monster: 1,
+    leftCircle: 2,
+    rightCircle: 3,
+}
+
+export class Entity extends VectorSprite {
     dx = 0
     dy = 0
     x0
@@ -13,16 +21,18 @@ export class Entity extends Sprite {
     xShift = 0
     yShift = 0
     grid
-    falling = false
+    type
     homeColumn
     homeRow
     respawnDelay = 0
 
-    constructor(grid, column, row) {
+    constructor(grid, column, row, layer, type) {
         super()
         this.column = this.homeColumn = column
         this.row = this.homeRow = row
         this.grid = grid
+        this.type = type
+        if(layer !== undefined) layer.add(this)
     }
 
     get xPos() {

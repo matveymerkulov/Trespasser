@@ -78,9 +78,14 @@ export let settings = {
         fraction: 1,
     },
 
-    enemy: {
+    monster: {
         speed: 1,
         fraction: 2,
+    },
+
+    circle: {
+        speed: 1,
+        fraction: 1,
     },
 
     falling: {

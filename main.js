@@ -7,7 +7,7 @@ import {Layer} from "../Furca/src/layer.js"
 import {MoveToPoint} from "./move_to_point.js"
 import {abs, dist, floor, sign} from "../Furca/src/functions.js"
 import {currentCanvas} from "../Furca/src/canvas.js"
-import {Entity} from "./entity.js"
+import {Entity, EntityType} from "./entity.js"
 import {ImageArray} from "../Furca/src/image_array.js"
 import {MoveSprite} from "./move_sprite.js"
 
@@ -78,13 +78,23 @@ project.init = () => {
         doorIndex = tiles.findTileIndex(closedDoorTile)
 
         objects.extractTilesByPos(playerTile, (tileMap, column, row) => {
-            player = new Entity(settings.player.fraction, column, row)
-            return player
+            player = new Entity(settings.player.fraction, column, row, undefined, EntityType.player)
+            return  player
         })
 
         objects.extractTilesByPos(enemyTile, (tileMap, column, row) => {
-            const entity = new Entity(settings.enemy.fraction, column, row)
-            enemies.add(entity)
+            return new Entity(settings.monster.fraction, column, row, enemies, EntityType.monster)
+        })
+
+        objects.extractTilesByPos(leftCircleTile, (tileMap, column, row) => {
+            const entity = new Entity(settings.circle.fraction, column, row, enemies, EntityType.circle)
+            entity.setMovingVector(-1, 0)
+            return entity
+        })
+
+        objects.extractTilesByPos(rightCircleTile, (tileMap, column, row) => {
+            const entity = new Entity(settings.circle.fraction, column, row, enemies, EntityType.circle)
+            entity.setMovingVector(1, 0)
             return entity
         })
 
@@ -114,17 +124,23 @@ project.init = () => {
                     ammo++
                     break
                 case flameTile:
-                    if(entity === player) {
-                        alert("YOU ARE BURNED DOWN")
-                        initLevel()
-                    } else {
-                        entity.column = entity.homeColumn
-                        entity.row = entity.homeRow
-                        const index = objects.tileIndexForPos(entity.homeColumn, entity.homeRow)
-                        entity.x = objects.tileXByIndex(index)
-                        entity.y = objects.tileYByIndex(index)
-                        entity.visible = false
-                        entity.respawnDelay = respawnDelay
+                    switch(entity.type) {
+                        case EntityType.player:
+                            alert("YOU ARE BURNED DOWN")
+                            initLevel()
+                            break
+                        case EntityType.monster:
+                            entity.column = entity.homeColumn
+                            entity.row = entity.homeRow
+                            const index = objects.tileIndexForPos(entity.homeColumn, entity.homeRow)
+                            entity.x = objects.tileXByIndex(index)
+                            entity.y = objects.tileYByIndex(index)
+                            entity.visible = false
+                            entity.respawnDelay = respawnDelay
+                            break
+                        case EntityType.circle:
+                            enemies.remove(entity)
+                            break
                     }
                     break
                 case openedDoorTile:
@@ -244,6 +260,17 @@ project.init = () => {
                     }
                     enemy.visible = true
                 }
+
+                if(enemy.type === EntityType.leftCircle) {
+                    move(enemy, -1, 0)
+                    continue
+                }
+
+                if(enemy.type === EntityType.rightCircle) {
+                    move(enemy, 1, 0)
+                    continue
+                }
+
                 const dx = sign(player.xPos - enemy.xPos)
                 const dy = sign(player.yPos - enemy.yPos)
                 if(dx !== 0 && move(enemy, dx, 0)) continue
