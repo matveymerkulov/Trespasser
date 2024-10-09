@@ -2,7 +2,7 @@ import {SpriteEffect} from "./sprite_effect.js"
 import {project} from "../Furca/src/project.js"
 import {Sprite} from "../Furca/src/sprite.js"
 import {grenadeImage} from "./data.js"
-import {crateTile, fx, grenades, level, player, wallTile} from "./main.js"
+import {crateTile, fx, grenades, player, tiles, wallTile} from "./main.js"
 import {VectorSprite} from "../Furca/src/vector_sprite.js"
 import {ShapeType} from "../Furca/src/shape.js"
 import {apsk} from "../Furca/src/system.js"
@@ -22,11 +22,11 @@ export class MoveSprite extends SpriteEffect {
 
     update() {
         this.sprite.shift(this.direction * apsk * 10, 0)
-        const column = level.tileColumnByPoint(this.sprite)
-        const row = level.tileRowByPoint(this.sprite)
-        const tile = level.tileByPos(column, row)
+        const column = tiles.tileColumnByPoint(this.sprite)
+        const row = tiles.tileRowByPoint(this.sprite)
+        const tile = tiles.tileByPos(column, row)
         if(tile === crateTile) {
-            level.setTileByPos(column, row, emptyTile)
+            tiles.setTileByPos(column, row, emptyTile)
         }
         if(tile === wallTile || tile === crateTile) {
             this.end()

@@ -13,7 +13,7 @@ import {MoveSprite} from "./move_sprite.js"
 
 project.getAssets = () => {
     return {
-        texture: ["tiles.png", "flame.png", "coins.png", "grenade.png"],
+        texture: ["tiles.png", "objects.png", "flame.png", "coins.png", "grenade.png"],
         sound: [],
     }
 }
@@ -22,13 +22,16 @@ export const wallTile = 0
 export const ladderTile = 1
 export const closedDoorTile = 2
 export const openedDoorTile = 3
-export const playerTile = 4
-export const enemyTile = 5
-export const crateTile = 6
-export const ammoTile = 7
-export const coinTile = 8
-export const flameTile = 9
-export const plankTile = 10
+export const crateTile = 4
+export const plankTile = 5
+
+export const playerTile = 0
+export const enemyTile = 1
+export const ammoTile = 2
+export const coinTile = 3
+export const flameTile = 4
+export const leftCircleTile = 5
+export const rightCircleTile = 6
 
 const blocks = [wallTile, crateTile, closedDoorTile]
 
@@ -39,7 +42,7 @@ export let GameState = {
     flying: 3,
 }
 
-export let gameState, fx, grenades, entities, level, ammo, player
+export let gameState, fx, grenades, entities, tiles, objects, levelNumber = 2,ammo, player
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -55,27 +58,31 @@ project.init = () => {
     defaultCanvas(11, 12)
     initTileMap()
 
-    let enemies, coins, doorIndex
+    let enemies, coins, doorIndex, respawnDelay
     initLevel()
 
     function initLevel() {
         gameState = GameState.falling
 
-        level = tileMap.level3.copy()
-        level.setPosition(0, 0)
+        const levelParameters = settings.level[levelNumber]
+        tiles = tileMap[`${levelParameters.name}_tiles`].copy()
+        tiles.setPosition(0, 0)
+        objects = tileMap[`${levelParameters.name}_objects`].copy()
+        objects.setPosition(0, 0)
 
-        coins = level.countTiles(coinTile)
+        respawnDelay = levelParameters.respawnDelay
+        coins = objects.countTiles(coinTile)
         ammo = 0
 
         enemies = new Layer()
-        doorIndex = level.findTileIndex(closedDoorTile)
+        doorIndex = tiles.findTileIndex(closedDoorTile)
 
-        level.extractTilesByPos(playerTile, (tileMap, column, row) => {
+        objects.extractTilesByPos(playerTile, (tileMap, column, row) => {
             player = new Entity(settings.player.fraction, column, row)
             return player
         })
 
-        level.extractTilesByPos(enemyTile, (tileMap, column, row) => {
+        objects.extractTilesByPos(enemyTile, (tileMap, column, row) => {
             const entity = new Entity(settings.enemy.fraction, column, row)
             enemies.add(entity)
             return entity
@@ -86,7 +93,7 @@ project.init = () => {
         grenades = new Layer()
 
         project.scene.clear()
-        project.scene.add(level, grenades, entities)
+        project.scene.add(tiles, objects, grenades, entities)
     }
 
     currentCanvas.background = "#999999"
@@ -94,16 +101,16 @@ project.init = () => {
     function checkTile() {
         entities.processSprites((entity) => {
             if(entity.xShift > 0 || entity.yShift > 0) return
-            switch(level.tileByPos(entity.column, entity.row)) {
+            switch(objects.tileByPos(entity.column, entity.row)) {
                 case coinTile:
                     if(entity !== player) return
-                    level.setTileByPos(entity.column, entity.row, emptyTile)
+                    objects.setTileByPos(entity.column, entity.row, emptyTile)
                     coins--
-                    if(coins === 0) level.setTileByIndex(doorIndex, openedDoorTile)
+                    if(coins === 0) objects.setTileByIndex(doorIndex, openedDoorTile)
                     break
                 case ammoTile:
                     if(entity !== player) return
-                    level.setTileByPos(entity.column, entity.row, emptyTile)
+                    objects.setTileByPos(entity.column, entity.row, emptyTile)
                     ammo++
                     break
                 case flameTile:
@@ -113,9 +120,11 @@ project.init = () => {
                     } else {
                         entity.column = entity.homeColumn
                         entity.row = entity.homeRow
-                        const index = level.tileIndexForPos(entity.homeColumn, entity.homeRow)
-                        entity.x = level.tileXByIndex(index)
-                        entity.y = level.tileYByIndex(index)
+                        const index = objects.tileIndexForPos(entity.homeColumn, entity.homeRow)
+                        entity.x = objects.tileXByIndex(index)
+                        entity.y = objects.tileYByIndex(index)
+                        entity.visible = false
+                        entity.respawnDelay = respawnDelay
                     }
                     break
                 case openedDoorTile:
@@ -128,7 +137,7 @@ project.init = () => {
     }
 
     function blockedTile(x, y) {
-        return blocks.includes(level.tileByPos(x, y))
+        return blocks.includes(tiles.tileByPos(x, y))
     }
 
     function move(entity, dx, dy) {
@@ -151,7 +160,7 @@ project.init = () => {
                 if(dx2 === 1 && entity.xShift === 0) continue
                 for(let dy2 = 0; dy2 <= 1; dy2++) {
                     if(dy2 === 1 && entity.yShift === 0) continue
-                    if(level.tileByPos(entity.column + dx2, entity.row + dy2) === ladderTile) {
+                    if(tiles.tileByPos(entity.column + dx2, entity.row + dy2) === ladderTile) {
                         onLadder = true
                     }
                 }
@@ -171,9 +180,9 @@ project.init = () => {
             if(blockedTile(x, entity.row + 1)) return false
             for(let dy = 0; dy <= 1; dy++) {
                 const y = entity.row + dy
-                let tile = level.tileByPos(x, y)
+                let tile = tiles.tileByPos(x, y)
                 if(tile === ladderTile) return false
-                if(tile === plankTile && entity.dy === 0) return false
+                if(tiles.tileByPos(x, y + 1) === plankTile && entity.dy === 0) return false
             }
         }
         return true
@@ -181,7 +190,7 @@ project.init = () => {
 
     project.update = () => {
         let time = new Date().getTime()
-        let tileSetImages = tileSet.trespasser.images
+        let tileSetImages = tileSet.objects.images
         tileSetImages.setImage(flameTile, flameImages.image(floor(time / 50) % 25))
         tileSetImages.setImage(coinTile, coinImages.image(floor(time / 200) % 6))
 
@@ -200,7 +209,7 @@ project.init = () => {
             } else if(right.wasPressed) {
                 dx = 1
             } else if(up.wasPressed) {
-                if(level.tileByPoint(player) === ladderTile) {
+                if(tiles.tileByPoint(player) === ladderTile) {
                     dy = -1
                 }
             } else if(down.wasPressed) {
@@ -228,6 +237,13 @@ project.init = () => {
             }
 
             for(let enemy of enemies.items) {
+                if(!enemy.visible) {
+                    if(enemy.respawnDelay > 0) {
+                        enemy.respawnDelay--
+                        continue
+                    }
+                    enemy.visible = true
+                }
                 const dx = sign(player.xPos - enemy.xPos)
                 const dy = sign(player.yPos - enemy.yPos)
                 if(dx !== 0 && move(enemy, dx, 0)) continue
@@ -251,7 +267,7 @@ project.init = () => {
             let someoneIsFalling = false
             entities.processSprites((entity) => {
                 entity.dx = 0
-                entity.dy = fall(entity) ? 1 : 0
+                entity.dy = fall(entity) && entity.visible ? 1 : 0
                 if(entity.dy > 0 && entity === player) {
                     someoneIsFalling = true
                 }
@@ -262,7 +278,6 @@ project.init = () => {
                     if(enemy1 === enemy2 || enemy1.dy === 0) continue
                     if(enemy1.collidesWith(enemy2)) {
                         enemy1.dy = 0
-                        enemy1.falling = false
                         continue
                     }
                     someoneIsFalling = true
@@ -281,6 +296,6 @@ project.init = () => {
             }
         }
 
-        player.limit(level)
+        player.limit(tiles)
     }
 }

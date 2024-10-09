@@ -11,7 +11,7 @@ export class TimedEffect extends SpriteEffect {
         this.#duration = num(parameters.duration)
         this.#type = parameters.type
         this.#startingTime = new Date().getTime()
-        if(this.#type === "forward") this.addSprite()
+        if(this.#type !== "backwards") this.addSprite()
     }
 
     update() {
@@ -20,14 +20,14 @@ export class TimedEffect extends SpriteEffect {
             this.end()
             return
         }
-        this.apply(this.sprite, this.#type === "forward" ? time : 1.0 - time)
+        this.apply(this.sprite, this.#type === "backwards" ? 1.0 - time : time)
     }
 
     apply(sprite, k) {
     }
 
     end() {
-        if(this.#type !== "forward") this.removeSprite()
+        if(this.#type === "backwards") this.removeSprite()
         super.end()
     }
 }

@@ -1,5 +1,4 @@
 import {Sprite} from "../Furca/src/sprite.js"
-import {level} from "./main.js"
 import {ctx, distToScreen, xToScreen, yToScreen} from "../Furca/src/canvas.js"
 import {abs} from "../Furca/src/functions.js"
 import {texture} from "../Furca/src/system.js"
@@ -17,6 +16,7 @@ export class Entity extends Sprite {
     falling = false
     homeColumn
     homeRow
+    respawnDelay = 0
 
     constructor(grid, column, row) {
         super()
@@ -39,10 +39,10 @@ export class Entity extends Sprite {
 
     draw() {
         super.draw()
-        const size = distToScreen(1)
+        /*const size = distToScreen(1)
         const x = xToScreen(level.tileXByColumn(this.column) + this.xShift / this.grid - 0.5)
         const y = yToScreen(level.tileYByRow(this.row) + this.yShift / this.grid - 0.5)
-        ctx.strokeRect(x, y, size, size)
+        ctx.strokeRect(x, y, size, size)*/
     }
 
     move(dx, dy) {
