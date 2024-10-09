@@ -42,7 +42,7 @@ export let GameState = {
     flying: 3,
 }
 
-export let gameState, fx, grenades, entities, tiles, objects, levelNumber = 2,ammo, player
+export let gameState, fx, grenades, entities, tiles, objects, levelNumber = 0, ammo, player
 
 project.init = () => {
     const left = new Key("ArrowLeft", "KeyA")
@@ -87,15 +87,11 @@ project.init = () => {
         })
 
         objects.extractTilesByPos(leftCircleTile, (tileMap, column, row) => {
-            const entity = new Entity(settings.circle.fraction, column, row, enemies, EntityType.circle)
-            entity.setMovingVector(-1, 0)
-            return entity
+            return new Entity(settings.circle.fraction, column, row, enemies, EntityType.leftCircle)
         })
 
         objects.extractTilesByPos(rightCircleTile, (tileMap, column, row) => {
-            const entity = new Entity(settings.circle.fraction, column, row, enemies, EntityType.circle)
-            entity.setMovingVector(1, 0)
-            return entity
+            return new Entity(settings.circle.fraction, column, row, enemies, EntityType.rightCircle)
         })
 
         entities = new Layer(player, enemies)
@@ -116,7 +112,7 @@ project.init = () => {
                     if(entity !== player) return
                     objects.setTileByPos(entity.column, entity.row, emptyTile)
                     coins--
-                    if(coins === 0) objects.setTileByIndex(doorIndex, openedDoorTile)
+                    if(coins === 0) tiles.setTileByIndex(doorIndex, openedDoorTile)
                     break
                 case ammoTile:
                     if(entity !== player) return
@@ -138,17 +134,18 @@ project.init = () => {
                             entity.visible = false
                             entity.respawnDelay = respawnDelay
                             break
-                        case EntityType.circle:
+                        case EntityType.leftCircle:
+                        case EntityType.rightCircle:
                             enemies.remove(entity)
                             break
                     }
                     break
-                case openedDoorTile:
-                    alert("VICTORY!")
-                    initLevel()
-                    break
             }
 
+            if(tiles.tileByPos(entity.column, entity.row) === openedDoorTile) {
+                alert("VICTORY!")
+                initLevel()
+            }
         })
     }
 
@@ -281,7 +278,7 @@ project.init = () => {
                 for(let enemy2 of enemies.items) {
                     if(enemy1 === enemy2) continue
                     if(enemy1.collidesWith(enemy2)) {
-                        move(enemy1, 0, sign(player.yPos - enemy1.yPos))
+                        move(enemy1, 0, dy)
                         if(enemy1.collidesWith(enemy2)) {
                             enemy1.dy = 0
                         }
