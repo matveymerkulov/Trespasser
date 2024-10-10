@@ -210,6 +210,15 @@ project.init = () => {
         initLevel()
     }
 
+    function checkPlayer() {
+        for(let enemy of enemies.items) {
+            if(enemy.collidesWith(player)) {
+                alert("YOU ARE CAUGHT!")
+                initLevel()
+            }
+        }
+    }
+
     project.update = () => {
         let time = new Date().getTime()
         let tileSetImages = tileSet.objects.images
@@ -240,12 +249,7 @@ project.init = () => {
                 dy = 1
             }
 
-            for(let enemy of enemies.items) {
-                if(enemy.collidesWith(player)) {
-                    alert("YOU ARE CAUGHT!")
-                    initLevel()
-                }
-            }
+            checkPlayer()
 
             if(dx === 0 && dy === 0 && !skip.wasPressed) return
 
@@ -315,15 +319,13 @@ project.init = () => {
             for(let enemy1 of enemies.items) {
                 for(let enemy2 of enemies.items) {
                     if(enemy1 === enemy2 || enemy1.dy === 0) continue
-                    if(enemy1.collidesWith(enemy2)) {
-                        enemy1.dy = 0
-                        continue
-                    }
+                    if(enemy1.collidesWith(enemy2)) enemy1.dy = 0
                 }
                 if(enemy1.dy > 0) someoneIsFalling = true
             }
 
             if(someoneIsFalling) {
+                checkPlayer()
                 gameState = GameState.moving
                 let movement = new MoveToPoint(settings.falling)
                 movement.next = () => {

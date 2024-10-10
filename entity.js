@@ -50,10 +50,10 @@ export class Entity extends VectorSprite {
 
     draw() {
         super.draw()
-        const size = distToScreen(1)
+        /*const size = distToScreen(1)
         const x = xToScreen(tiles.tileXByColumn(this.column) + this.xShift / this.grid - 0.5)
         const y = yToScreen(tiles.tileYByRow(this.row) + this.yShift / this.grid - 0.5)
-        ctx.strokeRect(x, y, size, size)
+        ctx.strokeRect(x, y, size, size)*/
     }
 
     move(dx, dy) {

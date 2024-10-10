@@ -16,6 +16,7 @@ export class MoveToPoint extends TimedEffect {
         entities.processSprites((entity) => {
             entity.setPosition(entity.x0 + entity.dx / entity.grid * k, entity.y0 + entity.dy / entity.grid * k)
         })
+
     }
 
     end() {
