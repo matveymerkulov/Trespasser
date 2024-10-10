@@ -3,6 +3,7 @@ import {ctx, distToScreen, xToScreen, yToScreen} from "../Furca/src/canvas.js"
 import {abs} from "../Furca/src/functions.js"
 import {texture} from "../Furca/src/system.js"
 import {VectorSprite} from "../Furca/src/vector_sprite.js"
+import {tiles} from "./main.js"
 
 export const EntityType = {
     player: 0,
@@ -44,15 +45,15 @@ export class Entity extends VectorSprite {
     }
 
     collidesWith(entity) {
-        return abs(this.xPos - entity.xPos) < this.grid && abs(this.yPos - entity.yPos) < 2
+        return abs(this.xPos - entity.xPos) < 2 && abs(this.yPos - entity.yPos) < 2
     }
 
     draw() {
         super.draw()
-        /*const size = distToScreen(1)
-        const x = xToScreen(level.tileXByColumn(this.column) + this.xShift / this.grid - 0.5)
-        const y = yToScreen(level.tileYByRow(this.row) + this.yShift / this.grid - 0.5)
-        ctx.strokeRect(x, y, size, size)*/
+        const size = distToScreen(1)
+        const x = xToScreen(tiles.tileXByColumn(this.column) + this.xShift / this.grid - 0.5)
+        const y = yToScreen(tiles.tileYByRow(this.row) + this.yShift / this.grid - 0.5)
+        ctx.strokeRect(x, y, size, size)
     }
 
     move(dx, dy) {

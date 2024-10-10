@@ -26,7 +26,7 @@ export const crateTile = 4
 export const plankTile = 5
 
 export const playerTile = 0
-export const enemyTile = 1
+export const monsterTile = 1
 export const ammoTile = 2
 export const coinTile = 3
 export const flameTile = 4
@@ -52,6 +52,7 @@ project.init = () => {
     const skip = new Key("Space")
     const fireLeft = new Key("KeyQ")
     const fireRight = new Key("KeyE")
+    const skipLevel = new Key("PageDown")
 
     loadData()
 
@@ -72,27 +73,24 @@ project.init = () => {
 
         respawnDelay = levelParameters.respawnDelay
         coins = objects.countTiles(coinTile)
-        ammo = 0
+        ammo = levelParameters.ammo ?? 0
 
         enemies = new Layer()
         doorIndex = tiles.findTileIndex(closedDoorTile)
 
-        objects.extractTilesByPos(playerTile, (tileMap, column, row) => {
-            player = new Entity(settings.player.fraction, column, row, undefined, EntityType.player)
-            return  player
-        })
+        function extract(tile, layer, parameters, type) {
+            let entity
+            objects.extractTilesByPos(tile, (tileMap, column, row) => {
+                entity = new Entity(parameters.fraction, column, row, layer, type)
+                return entity
+            })
+            return entity
+        }
 
-        objects.extractTilesByPos(enemyTile, (tileMap, column, row) => {
-            return new Entity(settings.monster.fraction, column, row, enemies, EntityType.monster)
-        })
-
-        objects.extractTilesByPos(leftCircleTile, (tileMap, column, row) => {
-            return new Entity(settings.circle.fraction, column, row, enemies, EntityType.leftCircle)
-        })
-
-        objects.extractTilesByPos(rightCircleTile, (tileMap, column, row) => {
-            return new Entity(settings.circle.fraction, column, row, enemies, EntityType.rightCircle)
-        })
+        player = extract(playerTile, undefined, settings.player, EntityType.player)
+        extract(monsterTile, enemies, settings.monster, EntityType.monster)
+        extract(leftCircleTile, enemies, settings.circle, EntityType.leftCircle)
+        extract(rightCircleTile, enemies, settings.circle, EntityType.rightCircle)
 
         entities = new Layer(player, enemies)
         fx = new Layer()
@@ -145,6 +143,7 @@ project.init = () => {
             if(tiles.tileByPos(entity.column, entity.row) === openedDoorTile) {
                 alert("VICTORY!")
                 initLevel()
+                nextLevel()
             }
         })
     }
@@ -179,6 +178,11 @@ project.init = () => {
                 }
             }
             if(!onLadder) return false
+        } else if(dy > 0) {
+            if(entity.yShift === 0) {
+                if(tiles.tileByPos(entity.column, entity.row + 1) === plankTile) return false
+                if(entity.xShift > 0 && tiles.tileByPos(entity.column + 1, entity.row + 1) === plankTile) return false
+            }
         }
 
         entity.dx = dx
@@ -190,15 +194,20 @@ project.init = () => {
         for(let dx = 0; dx <= 1; dx++) {
             if(dx === 1 && entity.xShift === 0) continue
             const x = entity.column + dx
-            if(blockedTile(x, entity.row + 1)) return false
             for(let dy = 0; dy <= 1; dy++) {
                 const y = entity.row + dy
-                let tile = tiles.tileByPos(x, y)
-                if(tile === ladderTile) return false
-                if(tiles.tileByPos(x, y + 1) === plankTile && entity.dy === 0) return false
+                if(tiles.tileByPos(x, y) === ladderTile) return false
             }
+            if(entity.yShift > 0) continue
+            if(blockedTile(x, entity.row + 1)) return false
+            if(entity.dy === 0 && tiles.tileByPos(x, entity.row + 1) === plankTile) return false
         }
         return true
+    }
+
+    function nextLevel() {
+        levelNumber = (levelNumber + 1) % settings.level.length
+        initLevel()
     }
 
     project.update = () => {
@@ -208,6 +217,8 @@ project.init = () => {
         tileSetImages.setImage(coinTile, coinImages.image(floor(time / 200) % 6))
 
         fx.update()
+
+        if(skipLevel.wasPressed) nextLevel()
 
         if(gameState === GameState.idle) {
             const d = fireLeft.wasPressed ? -1 : (fireRight.wasPressed ? 1 : 0)
@@ -268,19 +279,23 @@ project.init = () => {
                     continue
                 }
 
-                const dx = sign(player.xPos - enemy.xPos)
-                const dy = sign(player.yPos - enemy.yPos)
-                if(dx !== 0 && move(enemy, dx, 0)) continue
-                if(dy !== 0) move(enemy, 0, dy)
+                const dx2 = sign(player.xPos - enemy.xPos)
+                const dy2 = sign(player.yPos - enemy.yPos)
+                if(dx2 !== 0 && move(enemy, dx2, 0)) continue
+                move(enemy, 0, dy2)
             }
 
             for(let enemy1 of enemies.items) {
                 for(let enemy2 of enemies.items) {
                     if(enemy1 === enemy2) continue
                     if(enemy1.collidesWith(enemy2)) {
-                        move(enemy1, 0, dy)
-                        if(enemy1.collidesWith(enemy2)) {
-                            enemy1.dy = 0
+                        if(enemy1.type === EntityType.monster) {
+                            move(enemy1, 0, sign(player.yPos - enemy1.yPos))
+                            if(enemy1.collidesWith(enemy2)) {
+                                enemy1.dy = 0
+                            }
+                        } else {
+                            enemy1.dx = 0
                         }
                     }
                 }
@@ -304,8 +319,8 @@ project.init = () => {
                         enemy1.dy = 0
                         continue
                     }
-                    someoneIsFalling = true
                 }
+                if(enemy1.dy > 0) someoneIsFalling = true
             }
 
             if(someoneIsFalling) {
