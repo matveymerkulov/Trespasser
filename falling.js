@@ -33,8 +33,9 @@ export function falling() {
 
     for(let enemy1 of enemies.items) {
         for(let enemy2 of enemies.items) {
-            if(enemy1 === enemy2 || enemy1.dy === 0) continue
-            if(enemy1.collidesWith(enemy2)) enemy1.dy = 0
+            if(enemy1.dy === 0) break
+            if(enemy1 === enemy2) continue
+            if(enemy1.collidesWithStaticEntity(enemy2)) enemy1.dy = 0
         }
         if(enemy1.dy > 0) someoneIsFalling = true
     }

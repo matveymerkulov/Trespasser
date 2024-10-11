@@ -13,7 +13,7 @@ import {
     rightCircleTile
 } from "./tiles.js"
 
-export let gameState, fx, grenades, entities, tiles, objects, levelNumber = 0, ammo, player
+export let gameState, fx, grenades, entities, tiles, objects, levelNumber = settings.startingLevel, ammo, player
 export let enemies, coins, doorIndex, respawnDelay
 
 export function initLevel() {

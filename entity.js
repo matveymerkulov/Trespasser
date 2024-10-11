@@ -1,5 +1,7 @@
 import {abs} from "../Furca/src/functions.js"
 import {VectorSprite} from "../Furca/src/vector_sprite.js"
+import {tiles} from "./level.js"
+import {ctx, distToScreen, xToScreen, yToScreen} from "../Furca/src/canvas.js"
 
 export const EntityType = {
     player: 0,
@@ -32,24 +34,40 @@ export class Entity extends VectorSprite {
         if(layer !== undefined) layer.add(this)
     }
 
+    get staticXPos() {
+        return this.column * 2 + this.xShift
+    }
+
+    get staticYPos() {
+        return this.row * 2 + this.yShift
+    }
+
     get xPos() {
-        return this.column * 2 + this.xShift + this.dx
+        return this.staticXPos + this.dx * 2 / this.grid
     }
 
     get yPos() {
-        return this.row * 2 + this.yShift + this.dy
+        return this.staticYPos + this.dy * 2 / this.grid
     }
 
     collidesWith(entity) {
         return abs(this.xPos - entity.xPos) < 2 && abs(this.yPos - entity.yPos) < 2
     }
 
+    collidesWithStaticEntity(entity) {
+        return abs(this.xPos - entity.staticXPos) < 2 && abs(this.yPos - entity.staticYPos) < 2
+    }
+
+    staticallyCollidesWith(entity) {
+        return abs(this.staticXPos - entity.staticXPos) < 2 && abs(this.staticYPos - entity.staticYPos) < 2
+    }
+
     draw() {
         super.draw()
-        /*const size = distToScreen(1)
+        const size = distToScreen(1)
         const x = xToScreen(tiles.tileXByColumn(this.column) + this.xShift / this.grid - 0.5)
         const y = yToScreen(tiles.tileYByRow(this.row) + this.yShift / this.grid - 0.5)
-        ctx.strokeRect(x, y, size, size)*/
+        ctx.strokeRect(x, y, size, size)
     }
 
     move(dx, dy) {

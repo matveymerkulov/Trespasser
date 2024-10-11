@@ -1,5 +1,6 @@
 import {TimedEffect} from "./timed_effect.js"
 import {entities, fx} from "./level.js"
+import {checkPlayer} from "./player.js"
 
 export class MoveToPoint extends TimedEffect {
     constructor(parameters) {
@@ -23,5 +24,6 @@ export class MoveToPoint extends TimedEffect {
             entity.move(entity.dx, entity.dy)
         })
         super.end()
+        checkPlayer()
     }
 }

@@ -28,13 +28,13 @@ export function movePlayer() {
         dy = 1
     }
 
-    if(dx === 0 && dy === 0 && !skip.wasPressed) return
+    if(dx === 0 && dy === 0 && !skip.wasPressed) return false
 
     //console.log(player.column + ", " + player.row + ", " + player.xShift + ", " + player.yShift)
 
+    if(!setMovingVector(player, dx, dy)) return false
     player.limit(tiles)
     checkPlayer()
-    if(!setMovingVector(player, dx, dy)) return
 
     setGameState(GameState.moving)
     const movement = new MoveToPoint(settings.movement)
@@ -42,11 +42,13 @@ export function movePlayer() {
         checkTile()
         setGameState(GameState.falling)
     }
+
+    return true
 }
 
 export function checkPlayer() {
     for(let enemy of enemies.items) {
-        if(enemy.collidesWith(player)) {
+        if(enemy.staticallyCollidesWith(player)) {
             alert("YOU ARE CAUGHT!")
             initLevel()
         }

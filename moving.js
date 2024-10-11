@@ -2,6 +2,8 @@ import {sign} from "../Furca/src/functions.js"
 import {blockedTile, ladderTile, plankTile} from "./tiles.js"
 import {tiles} from "./level.js"
 
+
+
 export function setMovingVector(entity, dx, dy) {
     entity.dx = 0
     entity.dy = 0

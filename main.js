@@ -7,7 +7,7 @@ import {currentCanvas} from "../Furca/src/canvas.js"
 import {fx, initLevel, nextLevel} from "./level.js"
 import {coinTile, flameTile} from "./tiles.js"
 import {skipLevel} from "./keys.js"
-import {movePlayer} from "./player.js"
+import {checkPlayer, movePlayer} from "./player.js"
 import {falling} from "./falling.js"
 import {moveEnemies} from "./enemies.js"
 
@@ -52,8 +52,7 @@ project.init = () => {
         if(skipLevel.wasPressed) nextLevel()
 
         if(gameState === GameState.idle) {
-            movePlayer()
-            moveEnemies()
+            if(movePlayer()) moveEnemies()
         } else if(gameState === GameState.falling) {
             falling()
         }

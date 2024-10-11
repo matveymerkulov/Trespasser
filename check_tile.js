@@ -14,6 +14,8 @@ import {
     tiles
 } from "./level.js"
 
+
+
 export function checkTile() {
     entities.processSprites((entity) => {
         if(entity.xShift > 0 || entity.yShift > 0) return
