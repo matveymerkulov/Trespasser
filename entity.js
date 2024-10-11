@@ -1,9 +1,5 @@
-import {Sprite} from "../Furca/src/sprite.js"
-import {ctx, distToScreen, xToScreen, yToScreen} from "../Furca/src/canvas.js"
 import {abs} from "../Furca/src/functions.js"
-import {texture} from "../Furca/src/system.js"
 import {VectorSprite} from "../Furca/src/vector_sprite.js"
-import {tiles} from "./main.js"
 
 export const EntityType = {
     player: 0,

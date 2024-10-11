@@ -1,13 +1,12 @@
 import {SpriteEffect} from "./sprite_effect.js"
-import {project} from "../Furca/src/project.js"
 import {Sprite} from "../Furca/src/sprite.js"
 import {grenadeImage} from "./data.js"
-import {crateTile, fx, grenades, player, tiles, wallTile} from "./main.js"
-import {VectorSprite} from "../Furca/src/vector_sprite.js"
 import {ShapeType} from "../Furca/src/shape.js"
 import {apsk} from "../Furca/src/system.js"
 import {emptyTile} from "../Furca/src/tile_map.js"
 import {rad} from "../Furca/src/functions.js"
+import {fx, grenades, player, tiles} from "./level.js"
+import {crateTile, wallTile} from "./tiles.js"
 
 export class MoveSprite extends SpriteEffect {
     direction

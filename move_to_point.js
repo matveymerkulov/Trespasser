@@ -1,7 +1,5 @@
 import {TimedEffect} from "./timed_effect.js"
-import {settings} from "./data.js"
-import {fx} from "./main.js"
-import {entities} from "./main.js"
+import {entities, fx} from "./level.js"
 
 export class MoveToPoint extends TimedEffect {
     constructor(parameters) {
