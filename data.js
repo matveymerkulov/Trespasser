@@ -5,13 +5,7 @@ import {texture} from "../Furca/src/system.js"
 import {TileMap} from "../Furca/src/tile_map.js"
 import {Img} from "../Furca/src/image.js"
 
-export let flameImages, coinImages, grenadeImage
-
 export function loadData() {
-    flameImages = new ImageArray(texture.flame, 5, 5)
-    coinImages = new ImageArray(texture.coins, 6, 1)
-    grenadeImage = new Img(texture.grenade)
-
     tileSet.tiles = new TileSet(new ImageArray(texture.tiles, 6, 1, 0.5, 0.5, 1, 1), [
         0, 0, 0, 0, 0, 0,
     ], [], [], -1, [])

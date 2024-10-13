@@ -1,7 +1,6 @@
-import {coinImages, flameImages, loadData} from "./data.js"
 import {project, tileSet} from "../Furca/src/project.js"
 import {initTileMap} from "../Furca/src/tile_map.js"
-import {defaultCanvas} from "../Furca/src/system.js"
+import {defaultCanvas, texture} from "../Furca/src/system.js"
 import {floor} from "../Furca/src/functions.js"
 import {currentCanvas} from "../Furca/src/canvas.js"
 import {fx, initLevel, nextLevel} from "./level.js"
@@ -10,6 +9,9 @@ import {skipLevel} from "./keys.js"
 import {checkPlayer, movePlayer} from "./player.js"
 import {falling} from "./falling.js"
 import {moveEnemies} from "./enemies.js"
+import {ImageArray} from "../Furca/src/image_array.js"
+import {Img} from "../Furca/src/image.js"
+import {loadData} from "./data.js"
 
 project.getAssets = () => {
     return {
@@ -31,8 +33,14 @@ export function setGameState(state) {
     gameState = state
 }
 
+export let flameImages, coinImages, grenadeImage
+
 project.init = () => {
     loadData()
+
+    flameImages = new ImageArray(texture.flame, 5, 5)
+    coinImages = new ImageArray(texture.coins, 6, 1)
+    grenadeImage = new Img(texture.grenade)
 
     defaultCanvas(11, 12)
     initTileMap()

@@ -4,10 +4,10 @@ import {tiles} from "./level.js"
 import {ctx, distToScreen, xToScreen, yToScreen} from "../Furca/src/canvas.js"
 
 export const EntityType = {
-    player: 0,
-    monster: 1,
-    leftCircle: 2,
-    rightCircle: 3,
+    player: Symbol("player"),
+    monster: Symbol("monster"),
+    leftCircle: Symbol("leftCircle"),
+    rightCircle: Symbol("rightCircle"),
 }
 
 export class Entity extends VectorSprite {
