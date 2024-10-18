@@ -13,6 +13,7 @@ import {
     respawnDelay,
     tiles
 } from "./level.js"
+import {loc} from "../Furca/src/system.js"
 
 export function checkTile() {
     entities.processSprites((entity) => {
@@ -31,7 +32,7 @@ export function checkTile() {
             case flameTile:
                 switch(entity.type) {
                     case EntityType.player:
-                        alert("YOU ARE BURNED DOWN")
+                        alert(loc("burned"))
                         initLevel()
                         break
                     case EntityType.monster:
@@ -52,7 +53,7 @@ export function checkTile() {
         }
 
         if(tiles.tileByPos(entity.column, entity.row) === openedDoorTile) {
-            alert("VICTORY!")
+            alert(loc("victory"))
             nextLevel()
         }
     })

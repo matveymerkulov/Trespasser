@@ -7,6 +7,7 @@ import {down, fireLeft, fireRight, left, right, skip, up} from "./keys.js"
 import {ammo, changeAmmo, enemies, initLevel, player, tiles} from "./level.js"
 import {ladderTile} from "./tiles.js"
 import {GameState, setGameState} from "./main.js"
+import {loc} from "../Furca/src/system.js"
 
 export function movePlayer() {
     const d = fireLeft.wasPressed ? -1 : (fireRight.wasPressed ? 1 : 0)
@@ -49,7 +50,7 @@ export function movePlayer() {
 export function checkPlayer() {
     for(let enemy of enemies.items) {
         if(enemy.staticallyCollidesWith(player)) {
-            alert("YOU ARE CAUGHT!")
+            alert(loc("caught"))
             initLevel()
         }
     }

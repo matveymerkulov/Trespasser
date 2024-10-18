@@ -12,6 +12,7 @@ import {moveEnemies} from "./enemies.js"
 import {ImageArray} from "../Furca/src/image_array.js"
 import {Img} from "../Furca/src/image.js"
 import {loadData} from "./data.js"
+import "./text.js"
 
 project.getAssets = () => {
     return {
