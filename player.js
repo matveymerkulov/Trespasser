@@ -1,13 +1,13 @@
 import {MoveSprite} from "./move_sprite.js"
 import {setMovingVector} from "./moving.js"
 import {MoveToPoint} from "./move_to_point.js"
-import {settings} from "./data.js"
 import {checkTile} from "./check_tile.js"
 import {down, fireLeft, fireRight, left, right, skip, up} from "./keys.js"
 import {ammo, changeAmmo, enemies, initLevel, player, tiles} from "./level.js"
 import {ladderTile} from "./tiles.js"
 import {GameState, setGameState} from "./main.js"
 import {loc} from "../Furca/src/system.js"
+import {settings} from "./settings.js"
 
 export function movePlayer() {
     const d = fireLeft.wasPressed ? -1 : (fireRight.wasPressed ? 1 : 0)

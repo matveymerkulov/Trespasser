@@ -1,10 +1,10 @@
 import {MoveToPoint} from "./move_to_point.js"
-import {settings} from "./data.js"
 import {checkTile} from "./check_tile.js"
 import {GameState, gameState, setGameState} from "./main.js"
 import {enemies, entities, player, tiles} from "./level.js"
 import {blockedTile, ladderTile, plankTile} from "./tiles.js"
 import {checkPlayer} from "./player.js"
+import {settings} from "./settings.js"
 
 export function fall(entity) {
     for(let dx = 0; dx <= 1; dx++) {

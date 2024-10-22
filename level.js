@@ -1,4 +1,3 @@
-import {settings} from "./data.js"
 import {project, tileMap} from "../Furca/src/project.js"
 import {Layer} from "../Furca/src/layer.js"
 import {Entity, EntityType} from "./entity.js"
@@ -12,6 +11,7 @@ import {
     playerTile,
     rightCircleTile
 } from "./tiles.js"
+import {settings} from "./settings.js"
 
 export let gameState, fx, grenades, entities, tiles, objects, levelNumber = settings.startingLevel, ammo, player
 export let enemies, coins, doorIndex, respawnDelay
